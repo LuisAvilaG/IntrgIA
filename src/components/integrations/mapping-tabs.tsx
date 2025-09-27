@@ -1,14 +1,34 @@
 'use client'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "../ui/button"
 import { salesMappingData, taxMappingData, netsuiteAccounts } from "@/lib/data"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
+import { useToast } from "@/hooks/use-toast"
 
-export default function MappingTabs() {
+interface MappingTabsProps {
+  clientId: string;
+  integrationId: string; // 'new' in this flow
+  onBack: () => void;
+}
+
+export default function MappingTabs({ clientId, onBack }: MappingTabsProps) {
+  const { toast } = useToast();
+
+  const handleFinish = () => {
+    // In a real app, this would submit the final configuration.
+    toast({
+      title: "Integration Created!",
+      description: "The new integration has been successfully configured.",
+    });
+    // For now, we'll just log it. A real implementation would redirect.
+    console.log("Finished creation flow for client:", clientId);
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -37,6 +57,12 @@ export default function MappingTabs() {
           </TabsContent>
         </Tabs>
       </CardContent>
+      <CardFooter className="justify-end gap-2">
+        <Button variant="outline" onClick={onBack}>Back</Button>
+        <Link href={`/clients/${clientId}`}>
+          <Button onClick={handleFinish}>Finish</Button>
+        </Link>
+      </CardFooter>
     </Card>
   )
 }

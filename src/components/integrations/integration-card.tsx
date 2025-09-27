@@ -6,29 +6,35 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, ArrowRight, Play, Pause, Trash2, FileText, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { NetSuiteLogo, SimphonyLogo, ToastLogo } from '../icons';
+import Image from 'next/image';
 import { format, formatDistanceToNow } from 'date-fns';
 
-const LOGO_MAP = {
-  simphony: SimphonyLogo,
-  netsuite: NetSuiteLogo,
-  toast: ToastLogo,
+const LOGO_MAP: { [key: string]: string } = {
+  simphony: '/logos/simphony.png',
+  netsuite: '/logos/netsuite.png',
+  shopify: '/logos/shopify.png',
+  toast: '/logos/toast.png',
 };
 
 export default function IntegrationCard({ integration }: { integration: Integration }) {
-  const FromLogo = LOGO_MAP[integration.from as keyof typeof LOGO_MAP] || 'div';
-  const ToLogo = LOGO_MAP[integration.to as keyof typeof LOGO_MAP] || 'div';
+  const fromLogoSrc = LOGO_MAP[integration.from.toLowerCase()] || '/logos/default.png';
+  const toLogoSrc = LOGO_MAP[integration.to.toLowerCase()] || '/logos/default.png';
 
   const lastSyncDate = new Date(integration.lastSync.date);
+  const manageUrl = `/clients/${integration.clientId}/integrations/${integration.id}/mapping`;
 
   return (
     <Card className="flex flex-col hover:shadow-primary/20 hover:shadow-lg transition-shadow duration-300">
       <CardHeader>
         <div className="flex justify-between items-start">
           <CardTitle className="flex items-center gap-4">
-            <FromLogo className="h-6" />
+             <div className="flex items-center gap-2">
+                <Image src={fromLogoSrc} alt={`${integration.from} logo`} width={120} height={48} />
+              </div>
             <ArrowRight className="h-5 w-5 text-muted-foreground" />
-            <ToLogo className="h-6" />
+             <div className="flex items-center gap-2">
+                <Image src={toLogoSrc} alt={`${integration.to} logo`} width={120} height={48} />
+              </div>
           </CardTitle>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -38,7 +44,7 @@ export default function IntegrationCard({ integration }: { integration: Integrat
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
-                 <Link href={`/clients/${integration.clientId}/integrations/${integration.id}/settings`}><Settings className="mr-2 h-4 w-4"/> Edit Configuration</Link>
+                 <Link href={manageUrl}><Settings className="mr-2 h-4 w-4"/> Edit Configuration</Link>
               </DropdownMenuItem>
               <DropdownMenuItem><FileText className="mr-2 h-4 w-4"/> View Logs</DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -88,7 +94,7 @@ export default function IntegrationCard({ integration }: { integration: Integrat
       </CardContent>
       <CardFooter>
         <Button variant="secondary" className="w-full" asChild>
-           <Link href={`/clients/${integration.clientId}/integrations/${integration.id}/settings`}>
+           <Link href={manageUrl}>
             Manage Integration
           </Link>
         </Button>

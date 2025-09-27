@@ -2,9 +2,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AppShell from '@/components/layout/app-shell';
 import { getClientById, getIntegrationsByClientId } from '@/lib/data';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button'; // Import button styles
 import { PlusCircle } from 'lucide-react';
 import IntegrationCard from '@/components/integrations/integration-card';
+import { cn } from '@/lib/utils';
 
 export default function ClientDetailPage({ params }: { params: { clientId: string } }) {
   const client = getClientById(params.clientId);
@@ -23,11 +24,12 @@ export default function ClientDetailPage({ params }: { params: { clientId: strin
           <h1 className="text-3xl font-bold">{client.name}</h1>
           <p className="text-muted-foreground">Manage {client.name}'s integrations.</p>
         </div>
-        <Button asChild>
-          <Link href={newIntegrationUrl}>
-            <PlusCircle className="mr-2 h-4 w-4" /> New Integration
-          </Link>
-        </Button>
+        
+        {/* FINAL ATTEMPT: Using a Link styled as a button */}
+        <Link href={newIntegrationUrl} className={buttonVariants({ variant: "default" })}>
+          <PlusCircle className="mr-2 h-4 w-4" /> New Integration
+        </Link>
+        
       </div>
 
       {integrations.length > 0 ? (
@@ -40,11 +42,12 @@ export default function ClientDetailPage({ params }: { params: { clientId: strin
         <div className="text-center py-16 border-2 border-dashed rounded-lg">
           <h3 className="text-xl font-semibold">No Integrations Yet</h3>
           <p className="text-muted-foreground mt-2">Get started by creating the first integration for this client.</p>
-          <Button className="mt-4" asChild>
-            <Link href={newIntegrationUrl}>
-              <PlusCircle className="mr-2 h-4 w-4" /> Create Integration
-            </Link>
-          </Button>
+          
+          {/* FINAL ATTEMPT: Using a Link styled as a button */}
+          <Link href={newIntegrationUrl} className={cn(buttonVariants({ variant: "default" }), "mt-4")}>
+             <PlusCircle className="mr-2 h-4 w-4" /> Create Integration
+          </Link>
+
         </div>
       )}
     </AppShell>
