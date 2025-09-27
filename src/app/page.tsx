@@ -15,7 +15,7 @@ export default function Dashboard() {
           <p className="text-muted-foreground">An overview of all your clients.</p>
         </div>
         <Button asChild>
-          <Link href="#">
+          <Link href="/clients/new">
             <PlusCircle className="mr-2 h-4 w-4" /> New Client
           </Link>
         </Button>
