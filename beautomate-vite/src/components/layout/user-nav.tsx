@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,16 +10,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { logout } from '@/lib/actions';
 import { LogOut, User } from 'lucide-react';
 
 export function UserNav() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // En una aplicación real, aquí borrarías el token de autenticación.
+    console.log('User logged out.');
+    navigate('/login');
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src="/avatars/01.png" alt="@shadcn" />
+            <AvatarImage src="/avatars/01.png" alt="Admin" />
             <AvatarFallback>A</AvatarFallback>
           </Avatar>
         </Button>
@@ -38,14 +46,10 @@ export function UserNav() {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <form action={logout}>
-          <DropdownMenuItem asChild>
-            <button type="submit" className="w-full">
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
-            </button>
-          </DropdownMenuItem>
-        </form>
+        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Log out</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

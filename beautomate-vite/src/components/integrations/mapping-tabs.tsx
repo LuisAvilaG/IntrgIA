@@ -1,33 +1,28 @@
-'use client'
-
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "../ui/button"
-import { salesMappingData, taxMappingData, netsuiteAccounts } from "@/lib/data"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
-import { cn } from "@/lib/utils"
-import Link from "next/link"
-import { useToast } from "@/hooks/use-toast"
+import { Link, useParams } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "../ui/button";
+import { salesMappingData, taxMappingData, netsuiteAccounts } from "@/lib/data";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface MappingTabsProps {
-  clientId: string;
-  integrationId: string; // 'new' in this flow
   onBack: () => void;
 }
 
-export default function MappingTabs({ clientId, onBack }: MappingTabsProps) {
+export default function MappingTabs({ onBack }: MappingTabsProps) {
+  const { clientId } = useParams<{ clientId: string }>();
   const { toast } = useToast();
 
   const handleFinish = () => {
-    // In a real app, this would submit the final configuration.
     toast({
       title: "Integration Created!",
       description: "The new integration has been successfully configured.",
     });
-    // For now, we'll just log it. A real implementation would redirect.
     console.log("Finished creation flow for client:", clientId);
-  }
+  };
 
   return (
     <Card>
@@ -59,14 +54,13 @@ export default function MappingTabs({ clientId, onBack }: MappingTabsProps) {
       </CardContent>
       <CardFooter className="justify-end gap-2">
         <Button variant="outline" onClick={onBack}>Back</Button>
-        <Link href={`/clients/${clientId}`}>
+        <Link to={`/clients/${clientId}`}>
           <Button onClick={handleFinish}>Finish</Button>
         </Link>
       </CardFooter>
     </Card>
-  )
+  );
 }
-
 
 function MappingTable({ type }: { type: 'sales' | 'taxes'}) {
   const isSales = type === 'sales';
@@ -87,31 +81,21 @@ function MappingTable({ type }: { type: 'sales' | 'taxes'}) {
           {data.map((item, index) => (
             <TableRow key={item.id} className={cn(index === 0 && 'bg-primary/10 hover:bg-primary/15')}>
               <TableCell className="font-medium">{isSales ? item.toastItem : (item as any).toastTax}</TableCell>
-              
-              <TableCell>
-                 <SearchableSelect defaultValue={item.netsuiteAccount} />
-              </TableCell>
-
+              <TableCell><SearchableSelect defaultValue={item.netsuiteAccount} /></TableCell>
               {!isSales && <TableCell><SearchableSelect defaultValue={(item as any).vendor} /></TableCell>}
-              
               <TableCell><SearchableSelect defaultValue={item.location} /></TableCell>
               <TableCell><SearchableSelect defaultValue={item.class} /></TableCell>
               <TableCell><SearchableSelect defaultValue={item.department} /></TableCell>
-              
-              <TableCell className="text-right">
-                <Button variant="ghost" size="sm">Edit</Button>
-              </TableCell>
+              <TableCell className="text-right"><Button variant="ghost" size="sm">Edit</Button></TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }
 
 function SearchableSelect({ defaultValue }: { defaultValue: string }) {
-    // This is a placeholder for a real searchable select (Combobox).
-    // For now, it uses the standard Select component.
     const isDefault = defaultValue === "Default";
     const selectedValue = netsuiteAccounts.find(a => a.label === defaultValue)?.value;
     
@@ -133,5 +117,4 @@ function SearchableSelect({ defaultValue }: { defaultValue: string }) {
     );
 }
 
-// Separator is not exported from select, so we make a simple one here.
 const SelectSeparator = () => <div className="-mx-1 my-1 h-px bg-muted" />;

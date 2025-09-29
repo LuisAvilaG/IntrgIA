@@ -1,103 +1,103 @@
-import Link from 'next/link';
-import type { Integration } from '@/lib/definitions';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Link } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, ArrowRight, Play, Pause, Trash2, FileText, Settings } from 'lucide-react';
+import { ArrowRight, Settings, FileText, Pause, Play, Loader2 } from 'lucide-react';
+import { Integration } from '@/lib/definitions';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
-import { format, formatDistanceToNow } from 'date-fns';
+import { apiPost } from '@/lib/api';
+import toast from 'react-hot-toast';
+import { useState } from 'react';
 
-const LOGO_MAP: { [key: string]: string } = {
-  simphony: '/logos/simphony.png',
-  netsuite: '/logos/netsuite.png',
-  shopify: '/logos/shopify.png',
-  toast: '/logos/toast.png',
-};
+interface IntegrationCardProps {
+  integration: Integration;
+  onStatusChange: () => void; // Callback to tell the parent to refetch data
+}
 
-export default function IntegrationCard({ integration }: { integration: Integration }) {
-  const fromLogoSrc = LOGO_MAP[integration.from.toLowerCase()] || '/logos/default.png';
-  const toLogoSrc = LOGO_MAP[integration.to.toLowerCase()] || '/logos/default.png';
+export default function IntegrationCard({ integration, onStatusChange }: IntegrationCardProps) {
+  const [isToggling, setIsToggling] = useState(false);
+  const integrationUrl = `/clients/${integration.clientId}/integrations/${integration.id}/settings`;
+  const isActive = integration.status === 'active';
 
-  const lastSyncDate = new Date(integration.lastSync.date);
-  const manageUrl = `/clients/${integration.clientId}/integrations/${integration.id}/mapping`;
+  const handleToggleStatus = async () => {
+    setIsToggling(true);
+    const newStatus = isActive ? 'paused' : 'active';
+    
+    try {
+      const response = await apiPost('/integrations/status', {
+        integrationid: integration.id, // Ensure we use the lowercase id
+        newStatus: newStatus,
+      });
+
+      if (response.data.status === 'success') {
+        toast.success(`Integración ${newStatus === 'active' ? 'activada' : 'pausada'}`);
+        onStatusChange(); // Tell the parent component to refresh its data
+      } else {
+        toast.error('No se pudo cambiar el estado.');
+      }
+    } catch (error) {
+      console.error("Error al cambiar el estado de la integración:", error);
+      toast.error('Ocurrió un error en el servidor.');
+    } finally {
+      setIsToggling(false);
+    }
+  };
 
   return (
-    <Card className="flex flex-col hover:shadow-primary/20 hover:shadow-lg transition-shadow duration-300">
+    <Card className="flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1">
       <CardHeader>
-        <div className="flex justify-between items-start">
-          <CardTitle className="flex items-center gap-4">
-             <div className="flex items-center gap-2">
-                <Image src={fromLogoSrc} alt={`${integration.from} logo`} width={120} height={48} />
-              </div>
-            <ArrowRight className="h-5 w-5 text-muted-foreground" />
-             <div className="flex items-center gap-2">
-                <Image src={toLogoSrc} alt={`${integration.to} logo`} width={120} height={48} />
-              </div>
+        <div className="flex justify-between items-center">
+          <CardTitle className="flex items-center gap-3"> {/* Increased gap for more space */}
+            <span
+              className={cn(
+                'w-3 h-3 rounded-full',
+                {
+                  'bg-green-500': integration.status === 'active',
+                  'bg-yellow-500': integration.status === 'paused',
+                  'bg-gray-400': integration.status !== 'active' && integration.status !== 'paused'
+                }
+              )}
+              title={`Status: ${integration.status}`}
+            />
+            {integration.posSystem?.name} to {integration.erpSystem?.name}
           </CardTitle>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 -mt-2 -mr-2">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                 <Link href={manageUrl}><Settings className="mr-2 h-4 w-4"/> Edit Configuration</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem><FileText className="mr-2 h-4 w-4"/> View Logs</DropdownMenuItem>
-              <DropdownMenuSeparator />
-               {integration.status === 'active' ? (
-                 <DropdownMenuItem><Pause className="mr-2 h-4 w-4"/> Pause</DropdownMenuItem>
-               ) : (
-                <DropdownMenuItem><Play className="mr-2 h-4 w-4"/> Resume</DropdownMenuItem>
-               )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-500 hover:!text-red-500">
-                <Trash2 className="mr-2 h-4 w-4" /> Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center space-x-1">
+             <Button variant="ghost" size="icon" onClick={handleToggleStatus} title={isActive ? 'Pause Integration' : 'Activate Integration'} disabled={isToggling}>
+                {isToggling ? <Loader2 className="h-4 w-4 animate-spin" /> : (isActive ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />)}
+             </Button>
+             <Button variant="ghost" size="icon" asChild>
+                <Link to={integrationUrl} title="Settings">
+                    <Settings className="h-4 w-4" />
+                </Link>
+             </Button>
+             <Button variant="ghost" size="icon" onClick={() => alert('Viewing logs...')} title="View Logs">
+                <FileText className="h-4 w-4" />
+             </Button>
+          </div>
         </div>
-        <CardDescription>
-          <Badge
-            variant="outline"
-            className={cn(
-              'capitalize',
-              integration.status === 'active'
-                ? 'border-green-500 text-green-500'
-                : 'border-gray-500 text-gray-500'
-            )}
-          >
-            {integration.status}
-          </Badge>
-        </CardDescription>
+        <CardDescription className="pt-2">Syncs sales and customer data.</CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow space-y-3 text-sm">
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Last Sync:</span>
-          <span
-            className={cn(
-              integration.lastSync.status === 'success' ? 'text-green-400' : 'text-red-400'
-            )}
-          >
-            {formatDistanceToNow(lastSyncDate, { addSuffix: true })} - {integration.lastSync.status}
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">Next Sync:</span>
-          <span>
-            {integration.status === 'active' ? format(new Date(integration.nextSync), "MMM d, h:mm a") : 'N/A'}
-            </span>
+      <CardContent>
+        <div className="flex items-center justify-around text-center">
+            <div className="flex flex-col items-center gap-2">
+                <img src={integration.posSystem?.logo} alt={integration.posSystem?.name || 'POS'} className="h-[100px] w-[100px] object-contain" />
+                <span className="text-xs font-semibold">{integration.posSystem?.name}</span>
+            </div>
+            <ArrowRight className="text-gray-300 mx-4" />
+            <div className="flex flex-col items-center gap-2">
+                <img src={integration.erpSystem?.logo} alt={integration.erpSystem?.name || 'ERP'} className="h-[100px] w-[100px] object-contain" />
+                <span className="text-xs font-semibold">{integration.erpSystem?.name}</span>
+            </div>
         </div>
       </CardContent>
-      <CardFooter>
-        <Button variant="secondary" className="w-full" asChild>
-           <Link href={manageUrl}>
-            Manage Integration
-          </Link>
-        </Button>
+      <CardFooter className="flex-col items-start pt-4 border-t">
+        <div className="flex justify-between w-full text-xs text-muted-foreground">
+            <span>Last Sync</span>
+            <span>{integration.lastSync?.date || 'N/A'}</span>
+        </div>
+        <div className="flex justify-between w-full text-xs text-muted-foreground mt-1">
+            <span>Next Sync</span>
+            <span>{integration.nextSync || 'N/A'}</span>
+        </div>
       </CardFooter>
     </Card>
   );

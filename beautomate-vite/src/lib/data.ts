@@ -4,32 +4,29 @@ const integrations: Integration[] = [
   {
     id: 'int_001',
     clientId: 'cl_001',
-    from: 'simphony',
-    to: 'netsuite',
+    posSystem: { name: 'Simphony', logo: '/logos/simphony.png' },
+    erpSystem: { name: 'NetSuite', logo: '/logos/netsuite.png' },
     status: 'active',
-    lastSync: { date: '2024-07-23T10:00:00Z', status: 'success' },
-    nextSync: '2024-07-24T10:00:00Z',
-    clientConfiguration: 'Business Type: Quick Service Restaurant, POS: Simphony, Accounting: NetSuite, Locations: 5, Goal: Daily sales summary journal entry.'
+    lastSync: { date: '2 hours ago', status: 'success' },
+    nextSync: 'in 22 hours',
   },
   {
     id: 'int_002',
     clientId: 'cl_001',
-    from: 'toast',
-    to: 'netsuite',
+    posSystem: { name: 'Toast', logo: '/logos/toast.png' },
+    erpSystem: { name: 'NetSuite', logo: '/logos/netsuite.png' },
     status: 'paused',
-    lastSync: { date: '2024-07-22T18:30:00Z', status: 'failure' },
+    lastSync: { date: '1 day ago', status: 'failure' },
     nextSync: 'N/A',
-    clientConfiguration: 'Business Type: Fine Dining, POS: Toast, Accounting: NetSuite, Locations: 1, Goal: Itemized invoice per order.'
   },
   {
     id: 'int_003',
     clientId: 'cl_002',
-    from: 'toast',
-    to: 'netsuite',
+    posSystem: { name: 'Toast', logo: '/logos/toast.png' },
+    erpSystem: { name: 'NetSuite', logo: '/logos/netsuite.png' },
     status: 'active',
-    lastSync: { date: '2024-07-23T11:00:00Z', status: 'success' },
-    nextSync: '2024-07-24T11:00:00Z',
-    clientConfiguration: 'Business Type: Cafe Chain, POS: Toast, Accounting: NetSuite, Locations: 25, Goal: Daily sales summary with location-based segmentation.'
+    lastSync: { date: '1 hour ago', status: 'success' },
+    nextSync: 'in 23 hours',
   },
 ];
 
@@ -37,30 +34,23 @@ export const clients: Client[] = [
   {
     id: 'cl_001',
     name: 'Global Food Corp',
-    activeIntegrations: 1,
-    healthStatus: 'good',
-    integrations: [integrations[0], integrations[1]],
+    status: 'Active',
+    integrationCount: 2,
+    contact: { name: 'John Doe', email: 'john.doe@globalfood.com' },
   },
   {
     id: 'cl_002',
     name: 'Gourmet Innovations',
-    activeIntegrations: 1,
-    healthStatus: 'good',
-    integrations: [integrations[2]],
+    status: 'Active',
+    integrationCount: 1,
+    contact: { name: 'Jane Smith', email: 'jane.smith@gourmet.com' },
   },
   {
     id: 'cl_003',
     name: 'Quick Eats LLC',
-    activeIntegrations: 0,
-    healthStatus: 'bad',
-    integrations: [],
-  },
-  {
-    id: 'cl_004',
-    name: 'The Coffee Spot',
-    activeIntegrations: 5,
-    healthStatus: 'good',
-    integrations: [],
+    status: 'Inactive',
+    integrationCount: 0,
+    contact: { name: 'Jim Brown', email: 'jim.brown@quickeats.com' },
   },
 ];
 
@@ -68,7 +58,7 @@ export const getClientById = (id: string) => clients.find(c => c.id === id);
 export const getIntegrationsByClientId = (clientId: string) => integrations.filter(i => i.clientId === clientId);
 export const getIntegrationById = (id: string) => integrations.find(i => i.id === id);
 
-
+// Resto de los datos...
 export const netsuiteSubsidiaries: Subsidiary[] = [
   { value: 'sub_1', label: 'BeAutomate US' },
   { value: 'sub_2', label: 'BeAutomate EMEA' },
