@@ -13,51 +13,55 @@ const getBaseUrl = (): string => {
 }
 
 /**
- * Performs a GET request, trying the test URL first and falling back to the production URL.
- * @param endpoint The API endpoint to hit (e.g., '/clients').
+ * Performs a GET request with fallback logic and cancellation support.
+ * @param endpoint The API endpoint.
+ * @param signal Optional AbortSignal to cancel the request.
  * @returns The axios response.
  */
-export const apiGet = async (endpoint: string): Promise<AxiosResponse<any>> => {
+export const apiGet = async (endpoint: string, signal?: AbortSignal): Promise<AxiosResponse<any>> => {
     const baseUrl = getBaseUrl();
     const testUrl = `${baseUrl}/webhook-test${endpoint}`;
     const prodUrl = `${baseUrl}/webhook${endpoint}`;
 
     try {
-        console.log(`Intentando GET en (pruebas): ${testUrl}`);
-        return await axios.get(testUrl);
+        return await axios.get(testUrl, { signal });
     } catch (error: any) {
-        console.warn(`URL de pruebas falló. Intentando con la de producción...`);
+        if (axios.isCancel(error)) {
+            console.log('Request canceled:', error.message);
+            throw error;
+        }
         try {
-            console.log(`Intentando GET en (producción): ${prodUrl}`);
-            return await axios.get(prodUrl);
+            return await axios.get(prodUrl, { signal });
         } catch (prodError: any) {
-            console.error(`La URL de producción también falló.`);
-            throw prodError; // Re-throw the final error to be caught by the component
+            console.error(`API GET request to ${endpoint} failed on both test and prod URLs.`);
+            throw prodError;
         }
     }
 };
 
 /**
- * Performs a POST request, trying the test URL first and falling back to the production URL.
- * @param endpoint The API endpoint to hit (e.g., '/clients').
- * @param data The payload for the POST request.
+ * Performs a POST request with fallback logic and cancellation support.
+ * @param endpoint The API endpoint.
+ * @param data The payload for the request.
+ * @param signal Optional AbortSignal to cancel the request.
  * @returns The axios response.
  */
-export const apiPost = async (endpoint: string, data: any): Promise<AxiosResponse<any>> => {
+export const apiPost = async (endpoint: string, data: any, signal?: AbortSignal): Promise<AxiosResponse<any>> => {
     const baseUrl = getBaseUrl();
     const testUrl = `${baseUrl}/webhook-test${endpoint}`;
     const prodUrl = `${baseUrl}/webhook${endpoint}`;
 
     try {
-        console.log(`Intentando POST en (pruebas): ${testUrl}`);
-        return await axios.post(testUrl, data);
+        return await axios.post(testUrl, data, { signal });
     } catch (error: any) {
-        console.warn(`URL de pruebas falló. Intentando con la de producción...`);
+        if (axios.isCancel(error)) {
+            // Don't treat cancellation as a fallback-worthy error
+            throw error;
+        }
         try {
-            console.log(`Intentando POST en (producción): ${prodUrl}`);
-            return await axios.post(prodUrl, data);
+            return await axios.post(prodUrl, data, { signal });
         } catch (prodError: any) {
-            console.error(`La URL de producción también falló.`);
+            console.error(`API POST request to ${endpoint} failed on both test and prod URLs.`);
             throw prodError;
         }
     }

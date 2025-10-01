@@ -74,6 +74,18 @@ export const netsuiteAccounts: Account[] = [
   { value: 'acc_3001', label: '3001 - Sales Tax Payable' },
 ];
 
+export const netsuiteClasses = [
+    { value: 'class_1', label: 'Restaurant' },
+    { value: 'class_2', label: 'Retail' },
+    { value: 'class_3', label: 'Online' },
+];
+
+export const netsuiteDepartments = [
+    { value: 'dept_1', label: 'Front of House' },
+    { value: 'dept_2', label: 'Back of House' },
+    { value: 'dept_3', label: 'Management' },
+];
+
 export const salesMappingData: MappingItem[] = [
     { id: '1', toastItem: 'Default for All Sales', netsuiteAccount: '1001 - Sales Revenue', location: 'Default', class: 'Default', department: 'Default' },
     { id: '2', toastItem: 'Burger', netsuiteAccount: '1002 - Food Sales', location: 'Store 1', class: 'Food', department: 'Kitchen' },

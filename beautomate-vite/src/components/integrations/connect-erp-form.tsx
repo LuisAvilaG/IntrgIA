@@ -60,6 +60,7 @@ export function ConnectErpForm({ onNext, onBack, template, integrationId, initia
     try {
       const payload = {
         integrationid: integrationId,
+        connectionType: 'netsuite_tba', // Campo añadido como solicitado
         ...data,
       };
       
@@ -72,7 +73,6 @@ export function ConnectErpForm({ onNext, onBack, template, integrationId, initia
         throw new Error(response.data.message || "Connection failed. Please check credentials.");
       }
     } catch (error: any) {
-      console.error("Connection test failed:", error);
       toast.error(error.message);
     } finally {
       setIsTesting(false);

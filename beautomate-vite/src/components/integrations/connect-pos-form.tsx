@@ -23,12 +23,17 @@ const sftpSchema = z.object({
 
 type FormData = z.infer<typeof sftpSchema>;
 
+export interface PosConnectionDetails {
+    credentials: FormData;
+    connectionType: string;
+}
+
 interface ConnectPosFormProps {
-  onNext: (data: FormData) => void; // Pass data up on success
+  onNext: (details: PosConnectionDetails) => void; // Pass combined details up
   onBack: () => void;
   template: string | null;
   integrationId: string | null;
-  initialData?: FormData | null; // Receive initial/saved data
+  initialData?: FormData | null;
 }
 
 export function ConnectPosForm({ onNext, onBack, template, integrationId, initialData }: ConnectPosFormProps) {
@@ -37,7 +42,6 @@ export function ConnectPosForm({ onNext, onBack, template, integrationId, initia
   
   const form = useForm<FormData>({
     resolver: zodResolver(sftpSchema),
-    // Use initialData to pre-fill the form, or default values
     defaultValues: initialData || {
       hostname: '',
       username: '',
@@ -46,7 +50,6 @@ export function ConnectPosForm({ onNext, onBack, template, integrationId, initia
     },
   });
 
-  // If initialData changes (e.g., user goes back and forth), reset the form
   useEffect(() => {
     if (initialData) {
       form.reset(initialData);
@@ -71,12 +74,12 @@ export function ConnectPosForm({ onNext, onBack, template, integrationId, initia
 
       if (response.data.status === 'success') {
         toast.success("Connection successful!");
-        onNext(data); // Pass the successful data up to the parent before advancing
+        // Pass both credentials and connection type to the parent
+        onNext({ credentials: data, connectionType: connectionType });
       } else {
         throw new Error(response.data.message || "Connection failed. Please check credentials.");
       }
     } catch (error: any) {
-      console.error("Connection test failed:", error);
       toast.error(error.message);
     } finally {
       setIsTesting(false);
@@ -109,58 +112,10 @@ export function ConnectPosForm({ onNext, onBack, template, integrationId, initia
 
             {connectionType === 'sftp' && (
               <>
-                <FormField
-                  control={form.control}
-                  name="hostname"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Hostname</FormLabel>
-                      <FormControl>
-                        <Input placeholder="sftp.example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="port"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Port</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="22" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username</FormLabel>
-                      <FormControl>
-                        <Input placeholder="your-username" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <FormField control={form.control} name="hostname" render={({ field }) => ( <FormItem><FormLabel>Hostname</FormLabel><FormControl><Input placeholder="sftp.example.com" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                <FormField control={form.control} name="port" render={({ field }) => ( <FormItem><FormLabel>Port</FormLabel><FormControl><Input type="number" placeholder="22" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                <FormField control={form.control} name="username" render={({ field }) => ( <FormItem><FormLabel>Username</FormLabel><FormControl><Input placeholder="your-username" {...field} /></FormControl><FormMessage /></FormItem> )} />
+                <FormField control={form.control} name="password" render={({ field }) => ( <FormItem><FormLabel>Password</FormLabel><FormControl><Input type="password" {...field} /></FormControl><FormMessage /></FormItem> )} />
               </>
             )}
           </CardContent>
