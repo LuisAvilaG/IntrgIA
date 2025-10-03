@@ -3,15 +3,16 @@ import { useParams } from 'react-router-dom';
 import { Stepper } from '@/components/ui/stepper';
 import { IntegrationSelection } from '@/components/integrations/integration-selection';
 import { ConnectPosForm, PosConnectionDetails } from '@/components/integrations/connect-pos-form';
-import SftpFileConfigForm from '@/components/integrations/sftp-file-config-form'; // Importaremos el nuevo componente
+import SftpFileConfigForm from '@/components/integrations/sftp-file-config-form';
 import { ConnectErpForm } from '@/components/integrations/connect-erp-form';
 import SettingsForm from '@/components/integrations/settings-form';
+import FileFormatForm from '@/components/integrations/file-format-form';
 import MappingTabs from '@/components/integrations/mapping-tabs';
 import { apiGet, apiPost } from '@/lib/api';
 import toast from 'react-hot-toast';
 
 const BASE_STEPS = ['Select', 'Connect POS', 'Connect ERP', 'Settings', 'Mapping'];
-const SFTP_STEPS = ['Select', 'Connect POS', 'SFTP File Config', 'Connect ERP', 'Settings', 'Mapping'];
+const SFTP_STEPS = ['Select', 'Connect POS', 'SFTP File Config', 'Connect ERP', 'Settings', 'File Format', 'Mapping'];
 
 const formatIntegrationType = (templateId: string): string => {
     return templateId.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('-');
@@ -24,23 +25,20 @@ export default function NewIntegrationPage() {
   
   const [newIntegrationId, setNewIntegrationId] = useState<string | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-  
-  // Guardamos el tipo de conexión para determinar los pasos
   const [posConnectionType, setPosConnectionType] = useState<string | null>(null);
   
-  // State to hold the data from each step
   const [posCredentials, setPosCredentials] = useState(null);
   const [sftpConfig, setSftpConfig] = useState(null);
   const [erpCredentials, setErpCredentials] = useState(null);
+  const [analysisData, setAnalysisData] = useState(null);
+  const [fileFormatConfig, setFileFormatConfig] = useState(null);
 
-  // El array de pasos ahora es dinámico
-  const steps = useMemo(() => {
-    return posConnectionType === 'sftp' ? SFTP_STEPS : BASE_STEPS;
-  }, [posConnectionType]);
+  const steps = useMemo(() => posConnectionType === 'sftp' ? SFTP_STEPS : BASE_STEPS, [posConnectionType]);
 
   const handleNext = () => setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
   const handleBack = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
 
+  // **LA CORRECCIÓN:** Restaurar la lógica completa de esta función
   const handleSelectTemplate = async (templateId: string) => {
     if (!clientId) { toast.error("Client ID is missing."); return; }
     setIsLoading(true);
@@ -52,15 +50,17 @@ export default function NewIntegrationPage() {
       
       const payload = { clientid: clientData.clientID, integratioType: formatIntegrationType(templateId) };
       const response = await apiPost('/integrations', payload);
-      const createdIntegrationId = response.data.integrationid || response.data.integrationId;
+      let responseData = response.data;
+       if (Array.isArray(responseData) && responseData.length > 0) responseData = responseData[0];
+      const createdIntegrationId = responseData.integrationid || responseData.integrationId;
 
-      if (response.data.status === 'success' && createdIntegrationId) {
+      if (responseData.status === 'success' && createdIntegrationId) {
         toast.success('Integration record created!');
         setNewIntegrationId(createdIntegrationId);
         setSelectedTemplate(templateId);
         handleNext();
       } else {
-        throw new Error('Could not create integration record.');
+        throw new Error(responseData.message || 'Could not create integration record.');
       }
     } catch (error: any) {
       toast.error(error.message || "An unexpected error occurred.");
@@ -85,6 +85,16 @@ export default function NewIntegrationPage() {
     handleNext();
   };
 
+  const handleSettingsSubmit = (data: any) => {
+    setAnalysisData(data);
+    handleNext();
+  };
+
+  const handleFileFormatSubmit = (data: any) => {
+    setFileFormatConfig(data);
+    handleNext();
+  }
+
   const renderStepContent = () => {
     const currentStepName = steps[currentStep];
 
@@ -92,45 +102,17 @@ export default function NewIntegrationPage() {
       case 'Select':
         return <IntegrationSelection onSelect={handleSelectTemplate} isLoading={isLoading} />;
       case 'Connect POS':
-        return (
-          <ConnectPosForm 
-            onNext={handlePosSubmit} 
-            onBack={handleBack} 
-            template={selectedTemplate} 
-            integrationId={newIntegrationId}
-            initialData={posCredentials}
-          />
-        );
+        return <ConnectPosForm onNext={handlePosSubmit} onBack={handleBack} template={selectedTemplate} integrationId={newIntegrationId} initialData={posCredentials} />;
       case 'SFTP File Config':
-        return (
-          <SftpFileConfigForm 
-            onNext={handleSftpConfigSubmit}
-            onBack={handleBack}
-            integrationId={newIntegrationId}
-            initialData={sftpConfig}
-          />
-        );
+        return <SftpFileConfigForm onNext={handleSftpConfigSubmit} onBack={handleBack} integrationId={newIntegrationId} initialData={sftpConfig} />;
       case 'Connect ERP':
-        return (
-          <ConnectErpForm
-            onNext={handleErpSubmit}
-            onBack={handleBack}
-            template={selectedTemplate}
-            integrationId={newIntegrationId}
-            initialData={erpCredentials}
-          />
-        );
+        return <ConnectErpForm onNext={handleErpSubmit} onBack={handleBack} template={selectedTemplate} integrationId={newIntegrationId} initialData={erpCredentials} />;
       case 'Settings':
-        return (
-          <SettingsForm 
-            onNext={handleNext} 
-            onBack={handleBack} 
-            settings={{}} 
-            integrationId={newIntegrationId}
-          />
-        );
+        return <SettingsForm onNext={handleSettingsSubmit} onBack={handleBack} settings={analysisData || {}} integrationId={newIntegrationId} />;
+      case 'File Format':
+        return <FileFormatForm onNext={handleFileFormatSubmit} onBack={handleBack} integrationId={newIntegrationId} analysisData={analysisData} initialData={fileFormatConfig} />;
       case 'Mapping':
-        return <MappingTabs onBack={handleBack} />;
+        return <MappingTabs onBack={handleBack} integrationId={newIntegrationId} />;
       default:
         return <div>Unknown Step</div>;
     }

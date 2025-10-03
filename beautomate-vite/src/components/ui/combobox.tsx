@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { Check, ChevronsUpDown } from "lucide-react"
-
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -31,6 +30,8 @@ interface ComboboxProps {
     placeholder?: string;
     searchPlaceholder?: string;
     emptyPlaceholder?: string;
+    disabled?: boolean;
+    id?: string;
 }
 
 export function Combobox({ 
@@ -39,11 +40,11 @@ export function Combobox({
     onChange, 
     placeholder = "Select option...", 
     searchPlaceholder = "Search...",
-    emptyPlaceholder = "No results found."
+    emptyPlaceholder = "No results found.",
+    disabled,
+    id
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
-
-  const selectedOption = options.find((option) => option.value === value)
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -52,25 +53,29 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className="w-full justify-between font-normal"
+          disabled={disabled}
         >
-          {selectedOption ? selectedOption.label : placeholder}
+          {value
+            ? options.find((option) => option.value === value)?.label
+            : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
         <Command>
-          <CommandInput placeholder={searchPlaceholder} />
+          <CommandInput id={id} placeholder={searchPlaceholder} />
           <CommandList>
             <CommandEmpty>{emptyPlaceholder}</CommandEmpty>
             <CommandGroup>
               {options.map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.label}
+                  // El valor interno es el ID. La búsqueda funcionará sobre el texto de abajo.
+                  value={option.value}
+                  // onSelect ahora recibe el ID directamente.
                   onSelect={(currentValue) => {
-                    const newValue = options.find(o => o.label.toLowerCase() === currentValue.toLowerCase())?.value || ""
-                    onChange(newValue === value ? "" : newValue)
+                    onChange(currentValue === value ? "" : currentValue)
                     setOpen(false)
                   }}
                 >
@@ -80,6 +85,7 @@ export function Combobox({
                       value === option.value ? "opacity-100" : "opacity-0"
                     )}
                   />
+                  {/* Este es el texto visible que la librería también usará para buscar */}
                   {option.label}
                 </CommandItem>
               ))}
